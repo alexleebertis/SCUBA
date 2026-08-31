@@ -10,10 +10,10 @@ Re-parses cached AlphaFold PDBs and extracts:
   - n_glycosites  : N-linked glycosylation sequons (N-X-S/T, X!=P)
 
 Requires: biopython, numpy, pandas, requests
-          mkdssp (DSSP) on PATH
+          mkdssp (DSSP) — pass --dssp-bin if it is not on PATH
 Optional: FASTA file for full-length n_glycosites (more accurate than PDB-derived)
 
-Output: overwrites pmsm/model_features/alphafold_features.csv
+Output: model_features/alphafold_features.csv (see --out)
 """
 
 import os
@@ -21,6 +21,7 @@ import sys
 import time
 import csv
 import re
+import argparse
 import requests
 import numpy as np
 import pandas as pd
@@ -33,22 +34,21 @@ except ImportError:
     sys.exit(1)
 
 # ------------------------------------------------------------------
-# CONFIG
-_HERE = os.path.dirname(os.path.abspath(__file__))  # repo root; run from here
+# DEFAULTS (all overridable via CLI; paths are relative to this script)
+_HERE = os.path.dirname(os.path.abspath(__file__))
 FEATURES_CSV  = os.path.join(_HERE, "model_features", "features_biotin_pool.csv")
 OUT_CSV       = os.path.join(_HERE, "model_features", "alphafold_features.csv")
 PDB_CACHE     = os.path.join(_HERE, "alphafold_pdbs")
 API_BASE      = "https://alphafold.ebi.ac.uk/api/prediction"
-HEADERS       = {"User-Agent": "Mozilla/5.0 (compatible; BertisBot/1.0)"}
+HEADERS       = {"User-Agent": "SCUBA/1.0 (surfaceome research; contact: repo owner)"}
 SLEEP_SEC     = 0.15
 MAX_RETRIES   = 2
 N_WORKERS     = 6
+DSSP_BIN      = "mkdssp"
 
 # Optional: path to human FASTA for accurate n_glycosite counting
 # If not found, script extracts sequence from PDB (may miss unresolved tails)
 FASTA_PATH    = os.path.join(_HERE, "data", "uniprot_human.fasta")
-
-os.makedirs(PDB_CACHE, exist_ok=True)
 
 # ------------------------------------------------------------------
 # Helpers
@@ -139,7 +139,7 @@ def parse_structure(pdb_path, uid, fasta_seq=None):
     aa_list = []  # for PDB-derived sequence if FASTA missing
 
     try:
-        dssp = DSSP(model, pdb_path, dssp='mkdssp')
+        dssp = DSSP(model, pdb_path, dssp=DSSP_BIN)
         for key in dssp.keys():
             entry = dssp[key]
             ss_list.append(entry[2])          # secondary structure
@@ -229,6 +229,31 @@ def load_fasta_dict(fasta_path):
 # Main
 
 def main():
+    global FEATURES_CSV, OUT_CSV, PDB_CACHE, FASTA_PATH, SLEEP_SEC, N_WORKERS, DSSP_BIN
+
+    ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
+    ap.add_argument("--features-csv", default=FEATURES_CSV,
+                    help="input pool CSV with a uniprot_accession column")
+    ap.add_argument("--out", default=OUT_CSV, help="output CSV path")
+    ap.add_argument("--pdb-dir", default=PDB_CACHE,
+                    help="AlphaFold PDB cache directory (created if missing)")
+    ap.add_argument("--fasta", default=FASTA_PATH,
+                    help="human proteome FASTA for glycosite counting (optional)")
+    ap.add_argument("--workers", type=int, default=N_WORKERS,
+                    help="parallel download/parse threads")
+    ap.add_argument("--sleep", type=float, default=SLEEP_SEC,
+                    help="politeness delay between API calls (seconds)")
+    ap.add_argument("--dssp-bin", default=DSSP_BIN,
+                    help="mkdssp executable name or full path")
+    args = ap.parse_args()
+
+    FEATURES_CSV, OUT_CSV = args.features_csv, args.out
+    PDB_CACHE, FASTA_PATH = args.pdb_dir, args.fasta
+    SLEEP_SEC, N_WORKERS, DSSP_BIN = args.sleep, args.workers, args.dssp_bin
+
+    os.makedirs(PDB_CACHE, exist_ok=True)
+    os.makedirs(os.path.dirname(os.path.abspath(OUT_CSV)), exist_ok=True)
+
     print("=" * 60)
     print("AlphaFold Structural Feature Fetcher  (v2 — RSA + disorder + glycosites)")
     print("=" * 60)
