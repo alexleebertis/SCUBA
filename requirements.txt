@@ -1,0 +1,9 @@
+# SCUBA runtime dependencies (validated with the versions pinned below)
+pandas>=2.2      # developed on 3.0.3
+numpy>=1.26      # developed on 2.4.6
+scikit-learn>=1.4  # developed on 1.9.0
+biopython>=1.83  # developed on 1.87
+requests>=2.31   # developed on 2.34.2
+pyarrow>=14      # parquet I/O; developed on 24.0.0
+propka>=3.5      # PROPKA 3, pKa features; developed on 3.5.1
+tqdm>=4.66       # progress bars; developed on 4.68.2
