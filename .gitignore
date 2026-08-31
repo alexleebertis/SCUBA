@@ -1,0 +1,14 @@
+# --- proprietary / large inputs ---
+data/
+
+# --- generated artifacts ---
+model_features/
+alphafold_pdbs/
+propka_work/
+*.pt
+*.pkl
+
+# --- python ---
+__pycache__/
+*.pyc
+.venv/
