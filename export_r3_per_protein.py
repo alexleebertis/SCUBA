@@ -29,7 +29,7 @@ into one flat table:
 Also emits a protein-level rollup (mean over bio reps):
   r3_per_protein_predictions_byprotein.csv
 
-Run (from pmsm/):
+Run (from the repo root):
   python export_r3_per_protein.py                    # full 286 combos, ~45 min
   python export_r3_per_protein.py --max-combos 5     # smoke test
   python export_r3_per_protein.py --skip-oof         # ~10 min, no oof95 cols

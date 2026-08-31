@@ -43,7 +43,7 @@ Runs:
 Run:  python3 line_split_logreg_top20_biorep_pka.py
       python3 line_split_logreg_top20_biorep_pka.py --with-oof-threshold
       python3 line_split_logreg_top20_biorep_pka.py --max-combos 5   # smoke test
-Out:  model_features/line_split_generalization/
+Out:  model_features/line_split_generalization_pka/
 """
 
 import argparse
