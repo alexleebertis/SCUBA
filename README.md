@@ -78,10 +78,28 @@ reading copy of step 2 — documentation only, not part of the pipeline.
 
 Python ≥ 3.10; see `requirements.txt`. External (non-pip) dependencies:
 
-- **mkdssp** (DSSP binary) — required by step 1 for RSA/secondary structure
-- **PROPKA 3** (`pip install propka`) — required by step 4
+- **mkdssp** (DSSP binary) — required by steps 1–3 for RSA/secondary structure.
+  If it is not on `PATH`, pass `--dssp-bin /full/path/to/mkdssp`.
+- **PROPKA 3** (`pip install propka`) — required by step 5; the `propka3`
+  executable must be on `PATH` or passed via `--propka`.
 - AlphaFold PDBs are downloaded from `alphafold.ebi.ac.uk` (or supply a local
   `--pdb-dir` cache)
+
+## Reproducibility / portability
+
+All scripts are machine-agnostic: every path defaults to being relative to the
+repo root, and every environment-specific knob is a CLI flag (`--help` on any
+script lists them). Nothing is hardcoded to a particular workstation.
+
+- Steps 1–3 accept `--base-dir`, `--pdb-dir`, `--fasta`, `--parquet`,
+  `--out`, and `--dssp-bin` overrides.
+- Step 4 additionally accepts `--cell-lines "LineA,LineB,..."` and
+  `--required-tech-reps N` if you reuse the pipeline on a different
+  experiment (run names must carry a `repX_Y` = bio-rep X, tech-rep Y token).
+- Step 5 accepts `--pdb-dir`, `--workdir`, `--propka`, `--ph`, and `--jobs`.
+- `verify_linesplit.py` is an audit of *this study's* results — its expected
+  row counts (44,199 rows, 25 datasets, 286 combos) are the ground truth being
+  checked, not configuration.
 
 ## Inputs not in this repo (proprietary / large)
 
