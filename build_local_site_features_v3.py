@@ -37,6 +37,9 @@ except ImportError:
     sys.exit(1)
 
 
+# mkdssp executable (name on PATH or full path); overridable via --dssp-bin
+DSSP_BIN = "mkdssp"
+
 HYDROPATHY = {
     "A": 1.80, "C": 2.50, "D": -3.50, "E": -3.50, "F": 2.80,
     "G": -0.40, "H": -3.20, "I": 4.50, "K": -3.90, "L": 3.80,
@@ -247,7 +250,7 @@ def parse_structure(pdb_path, uid, fasta_seq):
     ss = {}
     dssp_ok = False
     try:
-        dssp = DSSP(model, pdb_path, dssp="mkdssp")
+        dssp = DSSP(model, pdb_path, dssp=DSSP_BIN)
         for key in dssp.keys():
             chain_id, residue_id = key
             pos = int(residue_id[1]) - 1
@@ -304,18 +307,24 @@ def shannon_entropy(seq):
 
 
 def main():
+    global DSSP_BIN
     ap = argparse.ArgumentParser()
     ap.add_argument("--base-dir",
                     default=os.path.dirname(os.path.abspath(__file__)))
     ap.add_argument("--out", default=None)
+    ap.add_argument("--pdb-dir", default=None,
+                    help="AlphaFold PDB cache (default: <base-dir>/alphafold_pdbs)")
+    ap.add_argument("--dssp-bin", default=DSSP_BIN,
+                    help="mkdssp executable name or full path")
     args = ap.parse_args()
 
+    DSSP_BIN = args.dssp_bin
     base = args.base_dir
     out_dir = os.path.join(base, "model_features")
     pool_csv = os.path.join(out_dir, "features_biotin_pool.csv")
     parquet = os.path.join(base, "data", "pmsm_results.all.parquet")
     fasta_path = os.path.join(base, "data", "human_proteome.fasta")
-    pdb_dir = os.path.join(base, "alphafold_pdbs")
+    pdb_dir = args.pdb_dir or os.path.join(base, "alphafold_pdbs")
     out_csv = args.out or os.path.join(out_dir, "local_site_features_v3.csv")
     qc_csv = os.path.join(out_dir, "local_site_features_v3_mapping_qc.csv")
     os.makedirs(out_dir, exist_ok=True)
