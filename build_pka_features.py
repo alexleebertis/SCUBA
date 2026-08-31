@@ -65,14 +65,11 @@ def f_deprot(pka, ph):
 def find_propka(user_path):
     if user_path:
         return user_path
-    for cand in ("/mnt/agents/pkgs/bin/propka3",):
-        if os.path.exists(cand):
-            return cand
     from shutil import which
     w = which("propka3")
     if w:
         return w
-    sys.exit("[FATAL] propka3 not found. pip install propka (or pass --propka).")
+    sys.exit("[FATAL] propka3 not found on PATH. pip install propka (or pass --propka).")
 
 
 def download_pdb(acc, pdb_dir):
@@ -179,18 +176,20 @@ def protein_features(acc, pdb_dir, propka_bin, workdir, ph, do_download):
 
 
 def main():
+    _here = os.path.dirname(os.path.abspath(__file__))
     ap = argparse.ArgumentParser()
     ap.add_argument("--datasets", help="biorep_datasets.csv (accession list)")
     ap.add_argument("--accessions", help="text file, one accession per line")
-    ap.add_argument("--pdb-dir", default="af_pdbs")
+    ap.add_argument("--pdb-dir", default=os.path.join(_here, "af_pdbs"),
+                    help="AlphaFold PDB cache (AF-<acc>-F1-model_v*.pdb naming)")
     ap.add_argument("--download", action="store_true",
                     help="download missing AlphaFold v6 models")
     ap.add_argument("--sites", help="CSV: uniprot_accession,site_resnum")
     ap.add_argument("--ph", type=float, default=7.2, help="labeling pH (SOP 7.2)")
     ap.add_argument("--jobs", type=int, default=2)
-    ap.add_argument("--propka", help="path to propka3 script")
-    ap.add_argument("--workdir", default="propka_work")
-    ap.add_argument("--out", default="pka_features.csv")
+    ap.add_argument("--propka", help="path to propka3 executable (default: found on PATH)")
+    ap.add_argument("--workdir", default=os.path.join(_here, "propka_work"))
+    ap.add_argument("--out", default=os.path.join(_here, "model_features", "pka_features.csv"))
     args = ap.parse_args()
 
     if args.datasets:
