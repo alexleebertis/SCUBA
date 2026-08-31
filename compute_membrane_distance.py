@@ -40,6 +40,7 @@ import os
 import sys
 import re
 import pickle
+import argparse
 import warnings
 import numpy as np
 import pandas as pd
@@ -53,16 +54,16 @@ except ImportError:
     print("[ERROR] pip install biopython")
     sys.exit(1)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # repo root; run from here
-OUT_DIR  = os.path.join(BASE_DIR, "model_features")
-os.makedirs(OUT_DIR, exist_ok=True)
+# DEFAULTS (all overridable via CLI; paths relative to this script)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-FEATURES_CSV  = os.path.join(OUT_DIR, "features_biotin_pool.csv")
+FEATURES_CSV  = os.path.join(BASE_DIR, "model_features", "features_biotin_pool.csv")
 PARQUET_PATH  = os.path.join(BASE_DIR, "data", "pmsm_results.all.parquet")
 FASTA_PATH    = os.path.join(BASE_DIR, "data", "human_proteome.fasta")
 PDB_CACHE     = os.path.join(BASE_DIR, "alphafold_pdbs")
-OUT_CSV       = os.path.join(OUT_DIR, "membrane_distance_features.csv")
-PLANE_PKL     = os.path.join(OUT_DIR, "membrane_planes.pkl")
+OUT_CSV       = os.path.join(BASE_DIR, "model_features", "membrane_distance_features.csv")
+PLANE_PKL     = os.path.join(BASE_DIR, "model_features", "membrane_planes.pkl")
+DSSP_BIN      = "mkdssp"
 
 # Kyte-Doolittle hydrophobicity scale
 KD_SCALE = {
@@ -196,7 +197,7 @@ def parse_pdb_with_coords(pdb_path, uid):
     ss_dict = {}
     dssp_ok = False
     try:
-        dssp = DSSP(model, pdb_path, dssp='mkdssp')
+        dssp = DSSP(model, pdb_path, dssp=DSSP_BIN)
         res_idx = 0
         for key in dssp.keys():
             entry = dssp[key]
@@ -257,6 +258,36 @@ def identify_tm_helices(ss_dict, ca_dict, fasta_seq, min_len=15, hydro_threshold
 # Main
 # ---------------------------------------------------------------------------
 def main():
+    global FEATURES_CSV, PARQUET_PATH, FASTA_PATH, PDB_CACHE, OUT_CSV, PLANE_PKL, DSSP_BIN
+
+    ap = argparse.ArgumentParser(description="Compute membrane-plane distances for biotin-labeled sites")
+    ap.add_argument("--base-dir", default=BASE_DIR,
+                    help="repo root; all other defaults resolve relative to this")
+    ap.add_argument("--features-csv", default=None,
+                    help="input pool CSV (default: <base>/model_features/features_biotin_pool.csv)")
+    ap.add_argument("--parquet", default=None,
+                    help="raw MaxQuant parquet (default: <base>/data/pmsm_results.all.parquet)")
+    ap.add_argument("--fasta", default=None,
+                    help="proteome FASTA (default: <base>/data/human_proteome.fasta)")
+    ap.add_argument("--pdb-dir", default=None,
+                    help="AlphaFold PDB cache (default: <base>/alphafold_pdbs)")
+    ap.add_argument("--out", default=None,
+                    help="output CSV (default: <base>/model_features/membrane_distance_features.csv)")
+    ap.add_argument("--dssp-bin", default=DSSP_BIN,
+                    help="mkdssp executable name or full path")
+    args = ap.parse_args()
+
+    base = args.base_dir
+    FEATURES_CSV = args.features_csv or os.path.join(base, "model_features", "features_biotin_pool.csv")
+    PARQUET_PATH = args.parquet or os.path.join(base, "data", "pmsm_results.all.parquet")
+    FASTA_PATH   = args.fasta or os.path.join(base, "data", "human_proteome.fasta")
+    PDB_CACHE    = args.pdb_dir or os.path.join(base, "alphafold_pdbs")
+    OUT_CSV      = args.out or os.path.join(base, "model_features", "membrane_distance_features.csv")
+    PLANE_PKL    = os.path.join(os.path.dirname(os.path.abspath(OUT_CSV)), "membrane_planes.pkl")
+    DSSP_BIN     = args.dssp_bin
+
+    os.makedirs(os.path.dirname(os.path.abspath(OUT_CSV)), exist_ok=True)
+
     print("=" * 70)
     print("Computing membrane plane distances")
     print("=" * 70)
