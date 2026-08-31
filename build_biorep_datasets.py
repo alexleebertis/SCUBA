@@ -37,14 +37,15 @@ Out:  model_features/biorep_datasets.csv
 import os
 import re
 import time
+import argparse
 
 import numpy as np
 import pandas as pd
 
 # ----------------------------------------------------------------------------
-# CONFIG
+# DEFAULTS (overridable via CLI; paths relative to this script)
 # ----------------------------------------------------------------------------
-PMSM_DIR = os.path.dirname(os.path.abspath(__file__))  # repo root; run from here
+PMSM_DIR = os.path.dirname(os.path.abspath(__file__))
 MF       = os.path.join(PMSM_DIR, "model_features")
 PARQUET  = os.path.join(PMSM_DIR, "data", "pmsm_results.all.parquet")
 FASTA    = os.path.join(PMSM_DIR, "data", "human_proteome.fasta")
@@ -61,7 +62,7 @@ RUN_TOKEN_RE = re.compile(r"rep(\d+)_(\d+)")   # repX_Y = bio rep X, tech rep Y
 
 CELL_LINE_NAMES = ["HepG2", "MIA_PaCa2", "RD", "G292", "Capan2", "MG63",
                    "A673", "Panc1", "A549", "NCI_H358", "A204", "Calu1",
-                   "Capan1"]
+                   "Capan1"]  # this study's 13 lines; override with --cell-lines
 
 # per-protein structural features merged from v3 / membrane tables
 # (everything in the Top-20 except the two recomputed assay features)
@@ -154,6 +155,38 @@ def load_fasta(path):
 
 
 def main():
+    global PMSM_DIR, MF, PARQUET, FASTA, POOL_CSV, V3_CSV, MEMB_CSV, OUT_CSV
+    global CELL_LINE_NAMES, REQUIRED_TECH_REPS
+
+    ap = argparse.ArgumentParser(
+        description="Assemble (cell line, biological replicate, protein) datasets")
+    ap.add_argument("--base-dir", default=PMSM_DIR,
+                    help="repo root; all other defaults resolve relative to this")
+    ap.add_argument("--parquet", default=None,
+                    help="raw MaxQuant parquet (default: <base>/data/pmsm_results.all.parquet)")
+    ap.add_argument("--fasta", default=None,
+                    help="proteome FASTA (default: <base>/data/human_proteome.fasta)")
+    ap.add_argument("--cell-lines", default=None,
+                    help="comma-separated cell-line names as they appear in run_name "
+                         "(default: this study's 13 lines)")
+    ap.add_argument("--required-tech-reps", type=int, default=REQUIRED_TECH_REPS,
+                    help="bio reps with fewer technical replicates are excluded")
+    ap.add_argument("--out", default=None,
+                    help="output CSV (default: <base>/model_features/biorep_datasets.csv)")
+    args = ap.parse_args()
+
+    PMSM_DIR = args.base_dir
+    MF       = os.path.join(PMSM_DIR, "model_features")
+    PARQUET  = args.parquet or os.path.join(PMSM_DIR, "data", "pmsm_results.all.parquet")
+    FASTA    = args.fasta or os.path.join(PMSM_DIR, "data", "human_proteome.fasta")
+    POOL_CSV = os.path.join(MF, "features_biotin_pool.csv")
+    V3_CSV   = os.path.join(MF, "local_site_features_v3.csv")
+    MEMB_CSV = os.path.join(MF, "membrane_distance_features.csv")
+    OUT_CSV  = args.out or os.path.join(MF, "biorep_datasets.csv")
+    if args.cell_lines:
+        CELL_LINE_NAMES = [s.strip() for s in args.cell_lines.split(",") if s.strip()]
+    REQUIRED_TECH_REPS = args.required_tech_reps
+
     t0 = time.time()
 
     # ---- load + strict filter ----------------------------------------------
