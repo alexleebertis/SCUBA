@@ -23,7 +23,7 @@ features; computed from structure only, no labels involved):
 
 SITE-LEVEL features (only with --sites CSV of labeled-lysine positions,
 columns: uniprot_accession,site_resnum — 1-based UniProt/AlphaFold numbering;
-derive from the same UniMod:293 peptide mapping as build_local_site_features_v3):
+derive from the same UniMod:293 peptide mapping as build_local_site_features):
   site_pka_mean/site_pka_min
   site_fdeprot_sum/site_fdeprot_max
 
@@ -89,7 +89,7 @@ def download_pdb(acc, pdb_dir):
 
 
 def find_pdb(acc, pdb_dir):
-    # project convention (build_local_site_features_v3.py): <ACCESSION>.pdb
+    # project convention (build_local_site_features.py): <ACCESSION>.pdb
     p = os.path.join(pdb_dir, f"{acc}.pdb")
     if os.path.exists(p):
         return p

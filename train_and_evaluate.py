@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-line_split_logreg_top20_biorep_pka.py
+train_and_evaluate.py
 
 Cross-cell-line generalization experiment, following the director's design:
 
@@ -40,9 +40,9 @@ Runs:
                         (only when model_features/pka_features.csv exists;
                         build it with build_pka_features.py)
 
-Run:  python3 line_split_logreg_top20_biorep_pka.py
-      python3 line_split_logreg_top20_biorep_pka.py --with-oof-threshold
-      python3 line_split_logreg_top20_biorep_pka.py --max-combos 5   # smoke test
+Run:  python3 train_and_evaluate.py
+      python3 train_and_evaluate.py --with-oof-threshold
+      python3 train_and_evaluate.py --max-combos 5   # smoke test
 Out:  model_features/line_split_generalization_pka/
 """
 

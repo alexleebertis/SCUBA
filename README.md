@@ -82,7 +82,7 @@ Run from the repository root. Each step writes into `model_features/`
 python3 fetch_alphafold_structural_features.py
 
 # 2. Compute local structural features around each biotin-labeled lysine
-python3 build_local_site_features_v3.py
+python3 build_local_site_features.py
 
 # 3. Compute membrane-topology features (distance of labeled sites to the
 #    predicted transmembrane plane)
@@ -101,7 +101,7 @@ python3 build_pka_features.py \
 
 # 6. Train and evaluate with leave-cell-lines-out cross-validation
 #    (286 train/test splits; ~1–2 h)
-python3 line_split_logreg_top20_biorep_pka.py --with-oof-threshold
+python3 train_and_evaluate.py --with-oof-threshold
 
 # 7. Independently audit the evaluation: re-derives every reported number
 #    from raw outputs and cross-checks against the raw MS data (PASS/FAIL)
@@ -109,7 +109,7 @@ python3 verify_linesplit.py
 
 # 8. (optional) Export per-protein scores and surface calls for every
 #    protein in every cell line
-python3 export_r3_per_protein.py
+python3 export_per_protein_predictions.py
 ```
 
 `docs/` contains a heavily commented reading copy of the local-site feature
@@ -162,13 +162,13 @@ All generated artifacts (`model_features/`, `alphafold_pdbs/`,
 
 ```
 fetch_alphafold_structural_features.py  step 1 — AlphaFold download + global structural features
-build_local_site_features_v3.py         step 2 — local structure around labeled lysines
+build_local_site_features.py            step 2 — local structure around labeled lysines
 compute_membrane_distance.py            step 3 — membrane-topology features
 build_biorep_datasets.py                step 4 — modeling-table assembly
 build_pka_features.py                   step 5 — lysine pKa / reactivity features
-line_split_logreg_top20_biorep_pka.py   step 6 — training + leave-cell-lines-out evaluation
+train_and_evaluate.py                   step 6 — training + leave-cell-lines-out evaluation
 verify_linesplit.py                     step 7 — independent audit of the evaluation
-export_r3_per_protein.py                step 8 — per-protein score export
+export_per_protein_predictions.py       step 8 — per-protein score export
 docs/                                   annotated reading copy of the step-2 extractor
 ```
 

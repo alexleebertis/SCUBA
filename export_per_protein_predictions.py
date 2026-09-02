@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-export_r3_per_protein.py — per-protein R3 results export.
+export_per_protein_predictions.py — per-protein R3 results export.
 
 R3 = Top-20 whitelist + tech-rep reproducibility + pKa features (35 feats),
 the FINAL model per the 2026-08-28 director decision (no SignalP6).
@@ -30,10 +30,10 @@ Also emits a protein-level rollup (mean over bio reps):
   r3_per_protein_predictions_byprotein.csv
 
 Run (from the repo root):
-  python export_r3_per_protein.py                    # full 286 combos, ~45 min
-  python export_r3_per_protein.py --max-combos 5     # smoke test
-  python export_r3_per_protein.py --skip-oof         # ~10 min, no oof95 cols
-  python export_r3_per_protein.py --include-features # append all 35 R3 features
+  python export_per_protein_predictions.py                    # full 286 combos, ~45 min
+  python export_per_protein_predictions.py --max-combos 5     # smoke test
+  python export_per_protein_predictions.py --skip-oof         # ~10 min, no oof95 cols
+  python export_per_protein_predictions.py --include-features # append all 35 R3 features
 
 Out: model_features/r3_per_protein_predictions.csv
      model_features/r3_per_protein_predictions_byprotein.csv
